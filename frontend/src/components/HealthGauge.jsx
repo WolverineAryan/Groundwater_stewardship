@@ -51,9 +51,9 @@ export default function HealthGauge({ score = 0 }) {
             padding: 0.02,
             gradient: true,
             subArcs: [
-              { limit: 40, color: "#ef4444" }, // red
-              { limit: 70, color: "#f59e0b" }, // amber
-              { color: "#9381FF" }, // primary
+              { limit: 40, color: "#B8B8FF" }, 
+              { limit: 70, color: "#9381FF" }, 
+              { color: "#9381FF" }, 
             ],
           }}
           pointer={{

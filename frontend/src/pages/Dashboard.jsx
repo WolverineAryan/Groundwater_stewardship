@@ -6,6 +6,7 @@ import HealthGauge from "../components/HealthGauge";
 import StatsCard from "../components/StatsCard";
 import BasinBubbleMap from "../components/BasicBubbleMap";
 import AmbientBackground from "../components/AmbientBackground";
+import AIStoryOverlay from "../components/AIStoryOverlay";
 
 import { getAIPrediction } from "../api/ai";
 
@@ -16,6 +17,7 @@ export default function Dashboard() {
   // ===============================
   const [aiData, setAiData] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [storyOpen, setStoryOpen] = useState(false);
 
   // ===============================
   // LIVE AI AUTO REFRESH
@@ -66,6 +68,22 @@ export default function Dashboard() {
           AI Monitoring Active
         </div>
       </div>
+        <div className="flex justify-end px-6 mt-2">
+  <button
+    onClick={() => setStoryOpen(true)}
+    className="
+      bg-[#9381FF]
+      text-white
+      px-5 py-2
+      rounded-full
+      shadow-lg
+      hover:scale-105
+      transition
+    "
+  >
+    ▶ Story Mode
+  </button>
+</div>
 
       {/* ================= MAIN CONTENT ================= */}
       <main className="max-w-7xl mx-auto p-6 space-y-6">
@@ -115,6 +133,13 @@ export default function Dashboard() {
         </div>
 
       </main>
+
+{storyOpen && (
+  <AIStoryOverlay
+    data={aiData}
+    onClose={() => setStoryOpen(false)}
+  />
+)}
 
     </div>
   );

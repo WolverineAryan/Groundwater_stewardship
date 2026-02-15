@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 
 import Navbar from "../components/Navbar";
+import TimelineScrubber from "../components/TimelineScrubber";
 
 import RainfallChart from "../components/analytics/RainfallChart";
 import GroundwaterChart from "../components/analytics/GroundwaterChart";
@@ -8,7 +9,7 @@ import RechargeChart from "../components/analytics/RechargeChart";
 import RelationChart from "../components/analytics/RelationChart";
 import PredictionCard from "../components/analytics/PredictionCard";
 
-import { getHistory } from "../api/ai";
+import { getHistory, getForecast } from "../api/ai";
 
 export default function Analytics() {
 
@@ -16,83 +17,105 @@ export default function Analytics() {
   const [selectedDate, setSelectedDate] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // ===============================
-  // LOAD DATA
-  // ===============================
+  // ====================================
+  // LOAD HISTORY + FORECAST
+  // ====================================
   useEffect(() => {
-    async function loadData() {
-      const res = await getHistory();
 
-      const history = res?.history || [];
+    async function loadAll() {
 
-      const enriched = history.map((d, i) => ({
-        date: d.date,
-        groundwater: d.groundwater,
-        rainfall: Math.max(0, 20 + Math.sin(i / 12) * 10),
-        recharge: d.groundwater * 0.12,
-      }));
+      try {
+        const historyRes = await getHistory();
+        const forecastRes = await getForecast(30);
 
-      setData(enriched);
+        const history = historyRes?.history || [];
+        const forecast = forecastRes?.forecast || [];
 
-      // default latest date
-      if (enriched.length)
-        setSelectedDate(enriched[enriched.length - 1].date);
+        // ---------- HISTORY ----------
+        const historyData = history.map((d, i) => ({
+          date: d.date,
+          groundwater: d.groundwater,
+          rainfall: Math.max(0, 20 + Math.sin(i / 12) * 10),
+          recharge: d.groundwater * 0.12,
+          type: "history",
+        }));
+
+        // ---------- FORECAST ----------
+        const lastDate = new Date(
+          historyData[historyData.length - 1].date
+        );
+
+        const forecastData = forecast.map((value, i) => {
+
+          const futureDate = new Date(lastDate);
+          futureDate.setDate(lastDate.getDate() + i + 1);
+
+          return {
+            date: futureDate.toISOString().slice(0, 10),
+            groundwater: value,
+            rainfall: null,
+            recharge: value * 0.12,
+            type: "forecast",
+          };
+        });
+
+        const combined = [...historyData, ...forecastData];
+
+        setData(combined);
+        setSelectedDate(combined[historyData.length - 1].date);
+
+      } catch (err) {
+        console.error(err);
+      }
 
       setLoading(false);
     }
 
-    loadData();
+    loadAll();
+
   }, []);
 
-  // ===============================
-  // FILTER DATA BY DATE
-  // ===============================
+  // ====================================
+  // FILTER BY TIMELINE POSITION
+  // ====================================
   const filteredData = useMemo(() => {
+
     if (!selectedDate) return data;
 
     return data.filter(d => d.date <= selectedDate);
+
   }, [data, selectedDate]);
 
+  // ====================================
+  // UI
+  // ====================================
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="min-h-screen bg-[#F8F7FF]">
 
       <Navbar />
 
-      <div className="p-6 space-y-6">
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
 
-        <h1 className="text-2xl font-bold">
-          Groundwater Analytics
+        <h1 className="text-2xl font-bold text-[#2b2b55]">
+          Groundwater Analytics Simulator
         </h1>
 
-        {/* ================= DATE SELECTOR ================= */}
-        <div className="bg-white p-4 rounded-xl shadow flex gap-4 items-center">
-
-          <label className="font-medium">
-            Select Analysis Date:
-          </label>
-
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="border rounded px-3 py-2"
-          />
-
-        </div>
+        {/* TIMELINE */}
+        <TimelineScrubber
+          data={data}
+          selectedDate={selectedDate}
+          onChange={setSelectedDate}
+        />
 
         {loading ? (
-          <div className="bg-white p-6 rounded-xl shadow">
-            Loading analytics data...
-          </div>
+          <div className="card">Loading analytics...</div>
         ) : (
           <>
-            {/* ROW 1 */}
             <div className="grid md:grid-cols-2 gap-6">
               <GroundwaterChart data={filteredData} />
               <RainfallChart data={filteredData} />
             </div>
 
-            {/* ROW 2 */}
             <div className="grid md:grid-cols-2 gap-6">
               <RelationChart data={filteredData} />
               <RechargeChart data={filteredData} />
