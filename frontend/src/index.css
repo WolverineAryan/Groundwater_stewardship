@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #9381FF;
+  --secondary: #B8B8FF;
+  --bg: #F8F7FF;
+  --surface: #F0EEFF;
+  --card: rgba(255,255,255,0.6);
+}
+
+/* ===== APP BACKGROUND ===== */
+body {
+  background:
+    radial-gradient(circle at 20% 20%, #B8B8FF22, transparent 40%),
+    radial-gradient(circle at 80% 80%, #9381FF22, transparent 40%),
+    var(--bg);
+
+  font-family: Inter, system-ui, sans-serif;
+}
+
+/* ===== GLASS CARD ===== */
+.card {
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  border-radius: 1.25rem;
+  border: 1px solid #ffffff60;
+  box-shadow:
+    0 20px 40px rgba(147,129,255,0.12);
+  padding: 1.5rem;
+}
+
+/* SECTION BLOCK */
+.section-surface {
+  background: var(--surface);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+}
